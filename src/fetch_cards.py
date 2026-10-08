@@ -2,6 +2,7 @@
 Free: bulk files don't count against API rate limits. Run once per day at most."""
 import json, sys, os, urllib.request
 from tags import tag
+from game_changers import FALLBACK
 
 UA = {"User-Agent": "DeckAutomation/0.1 (personal hobby project)", "Accept": "application/json"}
 
@@ -25,12 +26,32 @@ def trim(c):
     d["tags"] = tag(d)
     return d
 
+def find_download_uri(kind="oracle_cards"):
+    """Scryfall lists bulk files at /bulk-data as {"data": [{"type": ..., "download_uri": ...}]}."""
+    meta = json.loads(get("https://api.scryfall.com/bulk-data"))
+    for item in meta.get("data", []):
+        if item.get("type") == kind and item.get("download_uri"):
+            return item["download_uri"]
+    sys.exit(f"Could not find a '{kind}' bulk file. Scryfall returned:\n{json.dumps(meta)[:800]}")
+
 def main(out="data/cards.json"):
-    meta = json.loads(get("https://api.scryfall.com/bulk-data/oracle-cards"))
-    raw = json.loads(get(meta["download_uri"]))
+    uri = find_download_uri("oracle_cards")
+    print("downloading", uri, flush=True)
+    raw = json.loads(get(uri))
+    if not isinstance(raw, list):
+        sys.exit(f"Unexpected bulk file format: {str(raw)[:500]}")
     keep = [trim(c) for c in raw
             if c.get("legalities", {}).get("commander") == "legal"
             and c.get("layout") not in ("token", "art_series", "emblem", "double_faced_token")]
+    flagged = sum(c["game_changer"] for c in keep)
+    if flagged < 30:   # expected ~53; the flag is probably missing from the bulk data
+        fb = {n.lower() for n in FALLBACK}
+        for c in keep:
+            c["game_changer"] = c["name"].lower() in fb
+        print(f"WARNING: Scryfall flagged only {flagged} Game Changers; using built-in fallback list "
+              f"({sum(c['game_changer'] for c in keep)} matched). Check it is current.", flush=True)
+    else:
+        print(f"Game Changers flagged by Scryfall: {flagged}")
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         json.dump(keep, f, separators=(",", ":"))

@@ -1,0 +1,41 @@
+name: Build and check a deck
+# Click "Run workflow" in the Actions tab, fill in the form, download the "deck-report" artifact.
+on:
+  workflow_dispatch:
+    inputs:
+      commander: { description: "Commander name", required: true, default: "Grolnok, the Omnivore" }
+      tribe:     { description: "Creature type to emphasize (blank = auto)", default: "Frog" }
+      budget:    { description: "Approx USD budget", default: "400" }
+      max_gc:    { description: "Game Changer cap (3 = Bracket 3, 0 = Bracket 2)", default: "3" }
+      target:    { description: "Target bracket", default: "3" }
+      big_spell: { description: "Mana value of your biggest finisher", default: "8" }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      COMMANDER: ${{ inputs.commander }}
+      TRIBE: ${{ inputs.tribe }}
+      BUDGET: ${{ inputs.budget }}
+      MAX_GC: ${{ inputs.max_gc }}
+      TARGET: ${{ inputs.target }}
+      BIG: ${{ inputs.big_spell }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - id: day
+        run: echo "d=$(date +%F)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4            # one Scryfall download per day, reused across runs
+        with:
+          path: data/cards.json
+          key: cards-${{ steps.day.outputs.d }}
+      - name: Fetch Scryfall data (skipped if cached today)
+        run: test -s data/cards.json || python src/fetch_cards.py
+      - name: Build deck
+        run: python src/build_deck.py --commander "$COMMANDER" --tribe "$TRIBE" --budget "$BUDGET" --max-gc "$MAX_GC"
+      - name: Goldfish simulation
+        run: python src/goldfish.py out/deck.txt --tribe "$TRIBE" --big-spell "$BIG"
+      - name: Bracket report
+        run: python src/bracket_report.py out/deck.txt --target "$TARGET"
+      - uses: actions/upload-artifact@v4
+        with: { name: deck-report, path: out/ }

@@ -1,0 +1,78 @@
+1 Grolnok, the Omnivore
+1 Spore Frog
+1 Poison Dart Frog
+1 Froghemoth
+1 Long River Lurker
+1 Rampant Frogantua
+1 Plaxcaster Frogling
+1 Haze Frog
+1 Clement, the Worrywort
+1 Clifftop Lookout
+1 Jade Avenger
+1 Crocanura
+1 Burrog Befuddler
+1 Leapfrog
+1 Whiptongue Frog
+1 Stickytongue Sentinel
+1 Pond Prophet
+1 Lilysplash Mentor
+1 Omnibian
+1 Twenty-Toed Toad
+1 Bloated Toad
+1 Excavating Anurid
+1 Dour Port-Mage
+1 Frogmite
+1 Frogify
+1 Turn to Frog
+1 Croaking Counterpart
+1 Kasmina's Transmutation
+1 Maskwood Nexus
+1 Murkfiend Liege
+1 Door of Destinies
+1 Herald's Horn
+1 Vanquisher's Banner
+1 Metallic Mimic
+1 Kindred Discovery
+1 Sol Ring
+1 Arcane Signet
+1 Simic Signet
+1 Cultivate
+1 Kodama's Reach
+1 Farseek
+1 Nature's Lore
+1 Growth Spiral
+1 Eternal Witness
+1 Mulldrifter
+1 Harmonize
+1 Sylvan Library
+1 Fact or Fiction
+1 Retreat to Coralhelm
+1 Mystic Snake
+1 Counterspell
+1 Beast Within
+1 Into the Roil
+1 Rapid Hybridization
+1 Polliwallop
+1 Heroic Intervention
+1 Rhystic Study
+1 Cyclonic Rift
+1 Biorhythm
+1 Green Sun's Zenith
+1 Mana Drain
+1 Force of Negation
+1 Birthing Pod
+1 Command Tower
+1 Exotic Orchard
+1 Breeding Pool
+1 Yavimaya Coast
+1 Hinterland Harbor
+1 Thornwood Falls
+1 Tangled Islet
+1 Temple of Mystery
+1 Vineglimmer Snarl
+1 Path of Ancestry
+1 Simic Growth Chamber
+1 Simic Guildgate
+1 Reliquary Tower
+13 Forest
+11 Island

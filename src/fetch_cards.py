@@ -1,6 +1,6 @@
 """Download Scryfall's daily oracle-cards bulk file, trim it, tag it, write data/cards.json.
 Free: bulk files don't count against API rate limits. Run once per day at most."""
-import json, sys, os, urllib.request
+import gzip, json, sys, os, urllib.request
 from tags import tag
 from game_changers import FALLBACK
 
@@ -27,19 +27,34 @@ def trim(c):
     return d
 
 def find_download_uri(kind="oracle_cards"):
-    """Scryfall lists bulk files at /bulk-data as {"data": [{"type": ..., "download_uri": ...}]}."""
+    """Scryfall lists bulk files at /bulk-data. Newer responses give 'jsonl_download_uri'
+    (gzipped, one card per line); older ones gave 'download_uri' (one big JSON list)."""
     meta = json.loads(get("https://api.scryfall.com/bulk-data"))
     for item in meta.get("data", []):
-        if item.get("type") == kind and item.get("download_uri"):
-            return item["download_uri"]
+        if item.get("type") == kind:
+            for key in ("jsonl_download_uri", "download_uri"):
+                if item.get(key):
+                    return item[key]
     sys.exit(f"Could not find a '{kind}' bulk file. Scryfall returned:\n{json.dumps(meta)[:800]}")
+
+def parse_bulk(blob, uri):
+    """Handle gzip or plain bytes, JSONL or a JSON list."""
+    try:
+        blob = gzip.decompress(blob)
+    except (OSError, EOFError):
+        pass                                  # not gzipped (or already decoded)
+    text = blob.decode("utf-8")
+    if uri.endswith((".jsonl", ".jsonl.gz")) or not text.lstrip().startswith("["):
+        return [json.loads(line) for line in text.splitlines() if line.strip()]
+    return json.loads(text)
 
 def main(out="data/cards.json"):
     uri = find_download_uri("oracle_cards")
     print("downloading", uri, flush=True)
-    raw = json.loads(get(uri))
-    if not isinstance(raw, list):
+    raw = parse_bulk(get(uri), uri)
+    if not isinstance(raw, list) or not raw or not isinstance(raw[0], dict):
         sys.exit(f"Unexpected bulk file format: {str(raw)[:500]}")
+    print(f"downloaded {len(raw)} cards", flush=True)
     keep = [trim(c) for c in raw
             if c.get("legalities", {}).get("commander") == "legal"
             and c.get("layout") not in ("token", "art_series", "emblem", "double_faced_token")]
